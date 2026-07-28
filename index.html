@@ -68,11 +68,15 @@
     };
 
     function login() {
-      teamName = document.getElementById("team-input").value.trim();
-      teamPin = document.getElementById("pin-input").value.trim();
-      if (!teamName || !pinInput) return;
-      verifyAndStart();
-    }
+  teamName = document.getElementById("team-input").value.trim();
+  teamPin = document.getElementById("pin-input").value.trim();
+  
+  // Здесь была опечатка: pinInput заменен на teamPin
+  if (!teamName || !teamPin) return; 
+  
+  verifyAndStart();
+}
+
 
     function verifyAndStart() {
       fetch(`${SCRIPT_URL}?action=checkAuth&team=${encodeURIComponent(teamName)}&pin=${encodeURIComponent(teamPin)}`)
