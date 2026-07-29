@@ -29,14 +29,21 @@
       left: 0;
       width: 100%;
       height: 100%;
-      z-index: 500; /* Поверх карты, но под интерфейсом */
-      pointer-events: none; /* Пропускает клики на карту */
+      z-index: 500;
+      pointer-events: none;
     }
     
     .hud {
       position: absolute; top: 10px; right: 10px; z-index: 1000;
       background: rgba(10, 10, 15, 0.85); padding: 10px 15px; border-radius: 8px;
       border: 1px solid #333; font-weight: bold; font-size: 16px; color: #ffb703;
+    }
+
+    .logout-btn {
+      position: absolute; top: 10px; left: 10px; z-index: 1000;
+      background: rgba(10, 10, 15, 0.85); color: #e63946; border: 1px solid #333;
+      padding: 8px 12px; border-radius: 8px; font-weight: bold; font-size: 16px;
+      cursor: pointer; display: flex; align-items: center; gap: 6px;
     }
     
     .speed-hud {
@@ -80,24 +87,27 @@
 
   <!-- Игровой экран с картой -->
   <div id="map-container">
+    <button class="logout-btn" onclick="logout()" title="Выйти из аккаунта">🚪 Выйти</button>
+    
     <div class="hud" id="score-display">Очки: 500</div>
     <div class="speed-hud" id="speed-display">Скорость: 0 км/ч</div>
     
     <div id="map"></div>
-    <canvas id="fog-canvas"></canvas> <!-- 90% Туман войны -->
+    <canvas id="fog-canvas"></canvas>
 
     <button class="recenter-btn" onclick="enableFollowMode()" title="Центрировать на машине">🎯</button>
     <div id="alert-box" class="alert-box">ВНИМАНИЕ: Превышение скорости в болоте!</div>
   </div>
 
   <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   
   <script>
     // ⚠️ Вставьте сюда вашу ссылку из Google Apps Script 
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxXYJVK1KSvFc0GAj_0XI-_LMXz4hhtIhGN9wCRXhkuCroFW9cKzC4sY9UzUeSzwKEacA/exec";
- 
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxXYJVK1KSvFc0GAj_0XI-_LMXz4hhtIhGN9wCRXhkuCroFW9cKzC4sY9UzUeSzwKEacA/exec"; 
+
+    // Настройка базовой густоты общего тумана (0.90 = 90%)
+    const BASE_FOG_DENSITY = 0.90; 
 
     let teamName = localStorage.getItem("q_team") || "";
     let teamPin = localStorage.getItem("q_pin") || "";
@@ -106,6 +116,7 @@
     let zones = [];
     let visitedZones = [];
     let watchId = null;
+    let syncInterval = null;
     let followPlayer = true;
 
     // Элементы Canvas для тумана
@@ -128,6 +139,33 @@
       verifyAndStart();
     }
 
+    function logout() {
+      if (confirm("Вы уверены, что хотите выйти из аккаунта команды?")) {
+        // Очищаем локальные данные
+        localStorage.removeItem("q_team");
+        localStorage.removeItem("q_pin");
+        teamName = "";
+        teamPin = "";
+
+        // Отключаем геопозицию и интервалы
+        if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+        if (syncInterval) clearInterval(syncInterval);
+
+        // Переключаем интерфейс
+        document.getElementById("map-container").style.display = "none";
+        document.getElementById("auth-screen").style.display = "flex";
+        document.getElementById("team-input").value = "";
+        document.getElementById("pin-input").value = "";
+        document.getElementById("auth-msg").textContent = "";
+
+        // Удаляем карту при перезаходе для чистой инициализации
+        if (map) {
+          map.remove();
+          map = null;
+        }
+      }
+    }
+
     function verifyAndStart() {
       fetch(`${SCRIPT_URL}?action=checkAuth&team=${encodeURIComponent(teamName)}&pin=${encodeURIComponent(teamPin)}`)
         .then(res => res.json())
@@ -148,6 +186,8 @@
     }
 
     function initMap() {
+      if (map) return; // Защита от дублирования
+
       map = L.map('map', { zoomControl: false }).setView([currentLat, currentLng], 15);
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -166,7 +206,7 @@
       // Перерисовка тумана при движении или зуме карты
       map.on('move zoom draw', drawFog);
 
-      // Отключаем слежение, когда пользователь сам сдвигает карту
+      // Отключаем авто-слежение, если пользователь двигает карту вручную
       map.on('dragstart zoomstart', function() {
         followPlayer = false;
       });
@@ -180,17 +220,18 @@
         });
       }
 
-      setInterval(syncGameState, 8000);
+      syncInterval = setInterval(syncGameState, 8000);
       syncGameState();
     }
 
     function resizeFogCanvas() {
+      if (!fogCanvas) return;
       fogCanvas.width = window.innerWidth;
       fogCanvas.height = window.innerHeight;
       drawFog();
     }
 
-    // Отрисовка 90% плотного тумана с круглой дырой вокруг игрока
+    // Отрисовка общего тумана с круглой дырой вокруг игрока
     function drawFog() {
       if (!map || !fogCtx) return;
 
@@ -199,26 +240,18 @@
 
       fogCtx.clearRect(0, 0, w, h);
 
-      // Заливаем всё 90% темнотой (густой туман)
-      fogCtx.fillStyle = "rgba(10, 10, 15, 0.90)";
+      // Применяем выбранную общую густоту тумана
+      fogCtx.fillStyle = `rgba(10, 10, 15, ${BASE_FOG_DENSITY})`;
       fogCtx.fillRect(0, 0, w, h);
 
-      // Переводим GPS координаты машины в пиксели на экране
+      // Координаты машины на экране
       let playerPoint = map.latLngToContainerPoint([currentLat, currentLng]);
       
-      // Переводим радиус видимости из метров в пиксели экрана
-      let centerLatLng = map.getCenter();
-      let targetLatLng = L.latLng(centerLatLng.lat, centerLatLng.lng).destination ? 
-                         L.latLng(centerLatLng.lat, centerLatLng.lng) : [centerLatLng.lat, centerLatLng.lng];
-      
-      // Вычисляем размер дыры в тумане
-      let point1 = map.latLngToContainerPoint([currentLat, currentLng]);
-      let tempLatLng = L.latLng(currentLat, currentLng);
-      // Приблизительный расчет радиуса в пикселях
+      // Расчет видимого радиуса в пикселях
       let radiusInPixels = (visionRadiusMeters / 111300) * (map.getZoom() * 300); 
       radiusInPixels = Math.max(radiusInPixels, 80); // Минимальный видимый круг
 
-      // Прорезаем отверстие в тумане с мягким размытым краем
+      // Прорезаем отверстие в тумане
       fogCtx.globalCompositeOperation = "destination-out";
       
       let gradient = fogCtx.createRadialGradient(
@@ -250,7 +283,7 @@
         map.panTo([currentLat, currentLng]);
       }
 
-      drawFog(); // Перерисовываем туман под новое положение
+      drawFog();
       checkZonesProximity(currentLat, currentLng, speedKmH);
     }
 
@@ -273,6 +306,7 @@
         });
     }
 
+    // Настройка тумана и стиля для спец-зон
     function renderZonesOnMap() {
       map.eachLayer(layer => {
         if (layer instanceof L.Circle) map.removeLayer(layer);
@@ -281,13 +315,31 @@
       zones.forEach(zone => {
         if (visitedZones.includes(zone.id)) return;
 
-        let color = zone.type === 'anomaly' ? '#9b5de5' : '#00b4d8';
-        let fillColor = zone.type === 'anomaly' ? '#f15bb5' : '#90e0ef';
+        // Базовые настройки стиля
+        let zoneStyle = {
+          color: '#00b4d8',       // Граница
+          fillColor: '#90e0ef',   // Заливка
+          fillOpacity: 0.4,       // Прозрачность
+          stroke: true,
+          weight: 2
+        };
+
+        // Настройка уникальной густоты тумана для разных аномалий
+        if (zone.type === 'swamp') {
+          // БОЛОТО: Очень густой болотный туман (85%)
+          zoneStyle.color = '#2d6a4f';
+          zoneStyle.fillColor = '#1b4332';
+          zoneStyle.fillOpacity = 0.85; 
+        } 
+        else if (zone.type === 'anomaly') {
+          // БОНУС: Фиолетовая аномалия средней густоты (50%)
+          zoneStyle.color = '#7209b7';
+          zoneStyle.fillColor = '#f72585';
+          zoneStyle.fillOpacity = 0.50; 
+        }
 
         L.circle([zone.lat, zone.lng], {
-          color: color,
-          fillColor: fillColor,
-          fillOpacity: 0.5,
+          ...zoneStyle,
           radius: zone.radius
         }).addTo(map);
       });
