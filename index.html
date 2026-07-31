@@ -118,7 +118,6 @@
 </head>
 <body>
 
-  <!-- Экран авторизации -->
   <div id="auth-screen">
     <h2>Вход в Туман</h2>
     <input type="text" id="team-input" placeholder="Название команды">
@@ -127,7 +126,6 @@
     <div id="auth-msg" style="color: #e63946; margin-top: 10px;"></div>
   </div>
 
-  <!-- Игровой экран с картой -->
   <div id="map-container">
     <button class="logout-btn" onclick="logout()" title="Выйти из аккаунта">🚪 Выйти</button>
     
@@ -140,16 +138,13 @@
     <button class="recenter-btn" onclick="enableFollowMode()" title="Центрировать на машине">🎯</button>
     <div id="alert-box" class="alert-box">ВНИМАНИЕ: Превышение скорости в болоте!</div>
 
-    <!-- Финальный экран -->
     <div id="end-screen">
       <h2>Разминка окончена!</h2>
       <p>Код для продолжения:<br><span class="code-text">ПОЕХАЛИ</span></p>
-      <!-- Вставьте ссылку на следующий этап вместо решетки -->
       <a href="#" class="btn-link">Перейти по ссылке</a>
     </div>
   </div>
 
-  <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   
   <script>
@@ -168,8 +163,8 @@
     let followPlayer = true;
 
     let fogCanvas, fogCtx;
-    let visionRadiusMeters = 30; // Очень маленький радиус "фар" машины
-    let audioCtx; // Контекст для генерации звука
+    let visionRadiusMeters = 30; 
+    let audioCtx; 
 
     window.onload = function() {
       if (teamName && teamPin) {
@@ -177,7 +172,6 @@
       }
     };
 
-    // Инициализация звукового движка (требует клика пользователя)
     function initAudio() {
       if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -187,17 +181,16 @@
       }
     }
 
-    // Генерация электронного звука при сборе точки
     function playCollectSound() {
       try {
         if (!audioCtx) initAudio();
         let osc = audioCtx.createOscillator();
         let gain = audioCtx.createGain();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(880, audioCtx.currentTime); // Высокий старт
-        osc.frequency.exponentialRampToValueAtTime(110, audioCtx.currentTime + 0.3); // Спад
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime); 
+        osc.frequency.exponentialRampToValueAtTime(110, audioCtx.currentTime + 0.3); 
         gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3); // Затухание
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3); 
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.start();
@@ -206,7 +199,7 @@
     }
 
     function login() {
-      initAudio(); // Разблокируем звук по клику кнопки
+      initAudio(); 
       teamName = document.getElementById("team-input").value.trim();
       teamPin = document.getElementById("pin-input").value.trim();
       if (!teamName || !teamPin) {
@@ -306,32 +299,33 @@
 
       fogCtx.clearRect(0, 0, w, h);
 
-      // 1. Рисуем кромешную тьму поверх всей карты
       fogCtx.globalCompositeOperation = "source-over";
       fogCtx.fillStyle = `rgba(10, 10, 15, ${BASE_FOG_DENSITY})`;
       fogCtx.fillRect(0, 0, w, h);
 
-      // 2. Поверх темноты рисуем светящиеся точки (они будут видны сквозь тьму, а карта под ними - нет)
+      // Рисуем светящиеся точки
       zones.forEach(zone => {
         if (visitedZones.includes(zone.id)) return;
 
         let pt = map.latLngToContainerPoint([zone.lat, zone.lng]);
         
-        // Оптимизация: не рисуем то, что за пределами экрана
         if (pt.x < -50 || pt.x > w + 50 || pt.y < -50 || pt.y > h + 50) return;
 
-        let color = zone.type === 'swamp' ? '#00ff88' : '#f72585';
+        // Выбор цвета свечения в зависимости от типа
+        let color = '#ffffff'; 
+        if (zone.type === 'swamp') color = '#00ff88';          // Болото (зеленый)
+        else if (zone.type === 'anomaly') color = '#f72585';   // Аномалия (розовый)
+        else if (zone.type === 'checkpoint') color = '#ffb703'; // Чекпоинт (золотой)
 
         fogCtx.beginPath();
-        fogCtx.arc(pt.x, pt.y, 8, 0, Math.PI * 2); // Размер ядра свечения
+        fogCtx.arc(pt.x, pt.y, 8, 0, Math.PI * 2); 
         fogCtx.fillStyle = color;
-        fogCtx.shadowBlur = 20; // Эффект неонового свечения
+        fogCtx.shadowBlur = 20; 
         fogCtx.shadowColor = color;
         fogCtx.fill();
-        fogCtx.shadowBlur = 0; // Сбрасываем тень
+        fogCtx.shadowBlur = 0; 
       });
 
-      // 3. Прорезаем маленькое окошко вокруг самой машины (радиус фар)
       let playerPoint = map.latLngToContainerPoint([currentLat, currentLng]);
       let radiusInPixels = (visionRadiusMeters / 111300) * (map.getZoom() * 300); 
       radiusInPixels = Math.max(radiusInPixels, 40); 
@@ -385,14 +379,23 @@
             zones = data.zones || [];
             
             drawFog();
-            checkEndGame(); // Проверяем, не закончились ли точки
+            checkEndGame(); 
           }
         });
     }
 
+    // НОВАЯ ЛОГИКА ОКОНЧАНИЯ ИГРЫ: учитываем ТОЛЬКО checkpoint
     function checkEndGame() {
-      // Если зоны загрузились и все из них находятся в списке посещенных
-      if (zones.length > 0 && visitedZones.length >= zones.length) {
+      if (zones.length === 0) return; // Ждем загрузки с сервера
+
+      // Выбираем из всех зон только чекпоинты
+      let checkpoints = zones.filter(zone => zone.type === 'checkpoint');
+      
+      // Считаем, сколько чекпоинтов уже есть в массиве пройденных
+      let visitedCheckpointsCount = checkpoints.filter(zone => visitedZones.includes(zone.id)).length;
+
+      // Если чекпоинты вообще существуют на карте, и команда собрала их все
+      if (checkpoints.length > 0 && visitedCheckpointsCount >= checkpoints.length) {
         document.getElementById('end-screen').style.display = 'flex';
       }
     }
@@ -403,11 +406,10 @@
 
         let dist = map.distance([lat, lng], [zone.lat, zone.lng]);
 
-        // Срабатывание при приближении на 10 метров
         if (dist <= 10) {
-          playCollectSound(); // Звук!
-          visitedZones.push(zone.id); // Локально прячем точку
-          drawFog(); // Перерисовываем туман (точка пропадает)
+          playCollectSound(); 
+          visitedZones.push(zone.id); 
+          drawFog(); 
           
           triggerZoneAction(zone.id, speed);
           checkEndGame();
@@ -416,7 +418,6 @@
     }
 
     function triggerZoneAction(zoneId, speed) {
-      // Если это было болото и скорость превышена - сервер спишет очки
       fetch(`${SCRIPT_URL}?action=enterZone&team=${encodeURIComponent(teamName)}&pin=${encodeURIComponent(teamPin)}&zoneId=${zoneId}&coords=${currentLat},${currentLng}`)
         .then(res => res.json())
         .then(data => {
