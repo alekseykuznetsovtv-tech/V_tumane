@@ -54,9 +54,12 @@
   font-size: 16px; 
   color: #ffb703;
   text-align: center;
-  width: max-content; /* Блок подстроится под длину текста */
-  max-width: 90%; /* Если экран телефона очень узкий, текст аккуратно перенесется */
+  /* Исправляем ширину для узких экранов */
+  width: 85%; 
+  max-width: 340px; 
+  box-sizing: border-box;
 }
+
 
 /* Настройки для нашей новой мелкой надписи */
 .sub-text {
@@ -90,10 +93,17 @@
 
     
     .speed-hud {
-      position: absolute; top: 60px; right: 10px; z-index: 1000;
-      background: rgba(10, 10, 15, 0.85); padding: 8px 12px; border-radius: 8px;
-      font-size: 14px; border: 1px solid #333;
-    }
+  position: absolute; 
+  top: 95px; /* 👈 Опустили блок ниже (было 60px) */
+  right: 10px; 
+  z-index: 1000;
+  background: rgba(10, 10, 15, 0.85); 
+  padding: 8px 12px; 
+  border-radius: 8px;
+  font-size: 14px; 
+  border: 1px solid #333;
+}
+
 
     .recenter-btn {
       position: absolute;
