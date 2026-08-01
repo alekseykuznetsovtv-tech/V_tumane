@@ -406,7 +406,7 @@
       let speedMs = pos.coords.speed !== null ? pos.coords.speed : 0;
       let speedKmH = Math.round(speedMs * 3.6);
 
-      document.getElementById("speed-display").textContent = `Скорость: ${speedKmH} км/ч`;
+      document.getElementById("speed-display").textContent = `Ваша скорость: ${speedKmH} км/ч`;
       playerMarker.setLatLng([currentLat, currentLng]);
 
       if (followPlayer) {
