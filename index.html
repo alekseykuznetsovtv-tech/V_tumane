@@ -41,69 +41,67 @@
     }
     
     .hud {
-  position: absolute; 
-  top: 15px; 
-  left: 50%; 
-  transform: translateX(-50%); 
-  z-index: 1000;
-  background: rgba(10, 10, 15, 0.85); 
-  padding: 10px 15px; 
-  border-radius: 8px;
-  border: 1px solid #333; 
-  font-weight: bold; 
-  font-size: 16px; 
-  color: #ffb703;
-  text-align: center;
-  /* Исправляем ширину для узких экранов */
-  width: 85%; 
-  max-width: 340px; 
-  box-sizing: border-box;
-}
+      position: absolute; 
+      top: 15px; 
+      left: 50%; 
+      transform: translateX(-50%); 
+      z-index: 1000;
+      background: rgba(10, 10, 15, 0.85); 
+      padding: 10px 15px; 
+      border-radius: 8px;
+      border: 1px solid #333; 
+      font-weight: bold; 
+      font-size: 16px; 
+      color: #ffb703;
+      text-align: center;
+      width: 85%; 
+      max-width: 340px; 
+      box-sizing: border-box;
+    }
 
+    /* Настройки для мелких надписей */
+    .sub-text {
+      font-size: 11px; 
+      font-weight: normal; 
+      color: #bbbbbb; 
+      margin-top: 5px; 
+    }
 
-/* Настройки для нашей новой мелкой надписи */
-.sub-text {
-  font-size: 11px; /* Мелкий шрифт */
-  font-weight: normal; /* Обычная толщина (не жирный) */
-  color: #bbbbbb; /* Бледно-серый цвет, чтобы не отвлекать */
-  margin-top: 5px; /* Небольшой отступ от главной желтой надписи */
-}
-
-
+    /* Стиль для счетчика чекпоинтов */
+    .counter-text {
+      font-size: 13px;
+      font-weight: bold;
+      color: #00ff88;
+      margin-top: 4px;
+    }
 
     .logout-btn {
-  position: absolute; 
-  bottom: calc(40px + env(safe-area-inset-bottom)); 
-  left: 15px; 
-  z-index: 1000;
-  background: rgba(10, 10, 15, 0.85); color: #e63946; border: 1px solid #333;
-  padding: 5px 8px; 
-  border-radius: 6px; 
-  font-weight: bold; 
-  font-size: 13px; 
-  cursor: pointer; display: flex; align-items: center; 
-  gap: 4px; 
-  
-  /* Добавленные свойства, чтобы кнопка не растягивалась */
-  width: auto; 
-  margin: 0; 
-}
-
-
-
+      position: absolute; 
+      bottom: calc(40px + env(safe-area-inset-bottom)); 
+      left: 15px; 
+      z-index: 1000;
+      background: rgba(10, 10, 15, 0.85); color: #e63946; border: 1px solid #333;
+      padding: 5px 8px; 
+      border-radius: 6px; 
+      font-weight: bold; 
+      font-size: 13px; 
+      cursor: pointer; display: flex; align-items: center; 
+      gap: 4px; 
+      width: auto; 
+      margin: 0; 
+    }
     
     .speed-hud {
-  position: absolute; 
-  top: 80px; /* 👈 Опустили блок ниже (было 60px) */
-  right: 10px; 
-  z-index: 1000;
-  background: rgba(10, 10, 15, 0.85); 
-  padding: 8px 12px; 
-  border-radius: 8px;
-  font-size: 14px; 
-  border: 1px solid #333;
-}
-
+      position: absolute; 
+      top: 95px; 
+      right: 10px; 
+      z-index: 1000;
+      background: rgba(10, 10, 15, 0.85); 
+      padding: 8px 12px; 
+      border-radius: 8px;
+      font-size: 14px; 
+      border: 1px solid #333;
+    }
 
     .recenter-btn {
       position: absolute;
@@ -138,7 +136,6 @@
       display: none; font-weight: bold; text-align: center; box-shadow: 0 4px 15px rgba(230,57,70,0.5);
     }
 
-    /* Экран победы (Разминка окончена) */
     #end-screen {
       display: none;
       position: absolute;
@@ -176,12 +173,12 @@
   <div id="map-container">
     <button class="logout-btn" onclick="logout()" title="Выйти из аккаунта">🚪 Выйти</button>
     
-        <div class="hud">
+    <div class="hud">
       Посетите все жёлтые точки
       <div class="sub-text">Точка пропадёт оказавшись в радиусе 10м от вас</div>
+      <!-- Добавленная строка счетчика -->
+      <div class="counter-text" id="checkpoint-counter">Чекпоинты: загрузка...</div>
     </div>
-
-   
 
     <div class="speed-hud" id="speed-display">Ваша скорость: 0 км/ч</div>
     
@@ -191,12 +188,11 @@
     <button class="recenter-btn" onclick="enableFollowMode()" title="Центрировать на машине">🎯</button>
     <div id="alert-box" class="alert-box">ВНИМАНИЕ: Превышение скорости в болоте!</div>
 
-        <div id="end-screen">
+    <div id="end-screen">
       <h2>Разминка окончена!</h2>
       <p>Код для продолжения:<br><span class="code-text">AQ0808</span></p>
       <a href="https://alekseykuznetsovtv-tech.github.io/AQMain2" class="btn-link">Нажмите для перехода к заданиям</a>
     </div>
-
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -357,7 +353,6 @@
       fogCtx.fillStyle = `rgba(10, 10, 15, ${BASE_FOG_DENSITY})`;
       fogCtx.fillRect(0, 0, w, h);
 
-      // Рисуем светящиеся точки
       zones.forEach(zone => {
         if (visitedZones.includes(zone.id)) return;
 
@@ -365,11 +360,10 @@
         
         if (pt.x < -50 || pt.x > w + 50 || pt.y < -50 || pt.y > h + 50) return;
 
-        // Выбор цвета свечения в зависимости от типа
         let color = '#ffffff'; 
-        if (zone.type === 'swamp') color = '#00ff88';          // Болото (зеленый)
-        else if (zone.type === 'anomaly') color = '#f72585';   // Аномалия (розовый)
-        else if (zone.type === 'checkpoint') color = '#ffb703'; // Чекпоинт (золотой)
+        if (zone.type === 'swamp') color = '#00ff88';          
+        else if (zone.type === 'anomaly') color = '#f72585';   
+        else if (zone.type === 'checkpoint') color = '#ffb703'; 
 
         fogCtx.beginPath();
         fogCtx.arc(pt.x, pt.y, 8, 0, Math.PI * 2); 
@@ -428,27 +422,34 @@
         .then(res => res.json())
         .then(data => {
           if (data.status === "OK") {
-            //document.getElementById("score-display").textContent = `Очки: ${data.score}`;
             visitedZones = data.visitedZones || [];
             zones = data.zones || [];
             
             drawFog();
+            updateCounter(); // Обновляем счетчик на экране
             checkEndGame(); 
           }
         });
     }
 
-    // НОВАЯ ЛОГИКА ОКОНЧАНИЯ ИГРЫ: учитываем ТОЛЬКО checkpoint
-    function checkEndGame() {
-      if (zones.length === 0) return; // Ждем загрузки с сервера
-
-      // Выбираем из всех зон только чекпоинты
+    // Функция обновления текста счетчика чекпоинтов
+    function updateCounter() {
       let checkpoints = zones.filter(zone => zone.type === 'checkpoint');
-      
-      // Считаем, сколько чекпоинтов уже есть в массиве пройденных
+      let total = checkpoints.length;
+      if (total === 0) {
+        document.getElementById("checkpoint-counter").textContent = "Чекпоинты: 0/0";
+        return;
+      }
+      let visited = checkpoints.filter(zone => visitedZones.includes(zone.id)).length;
+      document.getElementById("checkpoint-counter").textContent = `Чекпоинты: ${visited} / ${total}`;
+    }
+
+    function checkEndGame() {
+      if (zones.length === 0) return; 
+
+      let checkpoints = zones.filter(zone => zone.type === 'checkpoint');
       let visitedCheckpointsCount = checkpoints.filter(zone => visitedZones.includes(zone.id)).length;
 
-      // Если чекпоинты вообще существуют на карте, и команда собрала их все
       if (checkpoints.length > 0 && visitedCheckpointsCount >= checkpoints.length) {
         document.getElementById('end-screen').style.display = 'flex';
       }
@@ -464,6 +465,7 @@
           playCollectSound(); 
           visitedZones.push(zone.id); 
           drawFog(); 
+          updateCounter(); // Сразу обновляем счетчик при въезде в зону
           
           triggerZoneAction(zone.id, speed);
           checkEndGame();
