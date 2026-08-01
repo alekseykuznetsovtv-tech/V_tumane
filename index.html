@@ -41,21 +41,33 @@
     }
     
     .hud {
-      position: absolute; top: 10px; right: 10px; z-index: 1000;
-      background: rgba(10, 10, 15, 0.85); padding: 10px 15px; border-radius: 8px;
-      border: 1px solid #333; font-weight: bold; font-size: 16px; color: #ffb703;
-    }
+  position: absolute; 
+  top: 15px; 
+  left: 50%; /* Сдвигаем на середину экрана */
+  transform: translateX(-50%); /* Выравниваем точно по центру оси X */
+  z-index: 1000;
+  background: rgba(10, 10, 15, 0.85); padding: 10px 15px; border-radius: 8px;
+  border: 1px solid #333; font-weight: bold; font-size: 16px; color: #ffb703;
+  white-space: nowrap; /* Чтобы текст не разбивался на две строки на узких экранах */
+  text-align: center;
+}
+
 
     .logout-btn {
-  position: absolute; top: 10px; left: 10px; z-index: 1000;
+  position: absolute; 
+  /* Убрали top, поставили bottom с учетом безопасной зоны экранов смартфонов */
+  bottom: calc(40px + env(safe-area-inset-bottom)); 
+  left: 15px; 
+  z-index: 1000;
   background: rgba(10, 10, 15, 0.85); color: #e63946; border: 1px solid #333;
-  padding: 5px 8px; /* 👈 Уменьшили отступы внутри кнопки (было 8px 12px) */
-  border-radius: 6px; /* Сделали углы чуть менее круглыми пропорционально размеру */
+  padding: 5px 8px; 
+  border-radius: 6px; 
   font-weight: bold; 
-  font-size: 13px; /* 👈 Уменьшили размер текста (было 16px) */
+  font-size: 13px; 
   cursor: pointer; display: flex; align-items: center; 
-  gap: 4px; /* 👈 Уменьшили расстояние между дверью и словом */
+  gap: 4px; 
 }
+
 
     
     .speed-hud {
