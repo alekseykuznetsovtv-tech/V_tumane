@@ -176,7 +176,6 @@
     <div class="hud">
       Посетите все жёлтые точки
       <div class="sub-text">Точка будет пройдена, оказавшись в радиусе менее 10м от вас</div>
-      <!-- Добавленная строка счетчика -->
       <div class="counter-text" id="checkpoint-counter">Чекпоинты: загрузка...</div>
     </div>
 
@@ -341,7 +340,7 @@
       drawFog();
     }
 
-        function drawFog() {
+    function drawFog() {
       if (!map || !fogCtx) return;
 
       let w = fogCanvas.width;
@@ -359,7 +358,7 @@
       let radiusInPixels = (visionRadiusMeters / 111300) * (map.getZoom() * 300); 
       radiusInPixels = Math.max(radiusInPixels, 40); 
 
-      fogCtx.globalCompositeOperation = "destination-out"; // Включаем "ластик"
+      fogCtx.globalCompositeOperation = "destination-out"; 
       let gradient = fogCtx.createRadialGradient(
         playerPoint.x, playerPoint.y, radiusInPixels * 0.4,
         playerPoint.x, playerPoint.y, radiusInPixels
@@ -373,7 +372,7 @@
       fogCtx.fill();
 
       // 3. И ТОЛЬКО ПОТОМ рисуем светящиеся точки поверх прорезанного тумана
-      fogCtx.globalCompositeOperation = "source-over"; // Возвращаем режим обычного рисования
+      fogCtx.globalCompositeOperation = "source-over"; 
       
       zones.forEach(zone => {
         if (visitedZones.includes(zone.id)) return;
@@ -395,27 +394,6 @@
         fogCtx.fill();
         fogCtx.shadowBlur = 0; 
       });
-    }
-
-
-      let playerPoint = map.latLngToContainerPoint([currentLat, currentLng]);
-      let radiusInPixels = (visionRadiusMeters / 111300) * (map.getZoom() * 300); 
-      radiusInPixels = Math.max(radiusInPixels, 40); 
-
-      fogCtx.globalCompositeOperation = "destination-out";
-      let gradient = fogCtx.createRadialGradient(
-        playerPoint.x, playerPoint.y, radiusInPixels * 0.4,
-        playerPoint.x, playerPoint.y, radiusInPixels
-      );
-      gradient.addColorStop(0, "rgba(0,0,0,1)");
-      gradient.addColorStop(1, "rgba(0,0,0,0)");
-
-      fogCtx.fillStyle = gradient;
-      fogCtx.beginPath();
-      fogCtx.arc(playerPoint.x, playerPoint.y, radiusInPixels, 0, Math.PI * 2);
-      fogCtx.fill();
-
-      fogCtx.globalCompositeOperation = "source-over";
     }
 
     function onPositionUpdate(pos) {
@@ -450,7 +428,7 @@
             zones = data.zones || [];
             
             drawFog();
-            updateCounter(); // Обновляем счетчик на экране
+            updateCounter(); 
             checkEndGame(); 
           }
         });
@@ -489,7 +467,7 @@
           playCollectSound(); 
           visitedZones.push(zone.id); 
           drawFog(); 
-          updateCounter(); // Сразу обновляем счетчик при въезде в зону
+          updateCounter(); 
           
           triggerZoneAction(zone.id, speed);
           checkEndGame();
