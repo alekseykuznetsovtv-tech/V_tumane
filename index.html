@@ -301,7 +301,7 @@
     function initMap() {
       if (map) return; 
 
-      map = L.map('map', { zoomControl: false }).setView([currentLat, currentLng], 15);
+      map = L.map('map', { zoomControl: false, attributionControl: false }).setView([currentLat, currentLng], 15);
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
