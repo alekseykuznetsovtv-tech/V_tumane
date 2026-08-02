@@ -394,7 +394,7 @@
         fogCtx.fill();
         fogCtx.shadowBlur = 0; 
       });
-    }
+    } // <-- В вашем коде сразу после этой скобки ошибочно повторялся кусок кода
 
     function onPositionUpdate(pos) {
       currentLat = pos.coords.latitude;
