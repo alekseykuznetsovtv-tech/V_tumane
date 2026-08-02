@@ -341,7 +341,7 @@
       drawFog();
     }
 
-    function drawFog() {
+        function drawFog() {
       if (!map || !fogCtx) return;
 
       let w = fogCanvas.width;
@@ -349,10 +349,32 @@
 
       fogCtx.clearRect(0, 0, w, h);
 
+      // 1. Рисуем кромешную тьму
       fogCtx.globalCompositeOperation = "source-over";
       fogCtx.fillStyle = `rgba(10, 10, 15, ${BASE_FOG_DENSITY})`;
       fogCtx.fillRect(0, 0, w, h);
 
+      // 2. СНАЧАЛА прорезаем окно видимости (фары машины)
+      let playerPoint = map.latLngToContainerPoint([currentLat, currentLng]);
+      let radiusInPixels = (visionRadiusMeters / 111300) * (map.getZoom() * 300); 
+      radiusInPixels = Math.max(radiusInPixels, 40); 
+
+      fogCtx.globalCompositeOperation = "destination-out"; // Включаем "ластик"
+      let gradient = fogCtx.createRadialGradient(
+        playerPoint.x, playerPoint.y, radiusInPixels * 0.4,
+        playerPoint.x, playerPoint.y, radiusInPixels
+      );
+      gradient.addColorStop(0, "rgba(0,0,0,1)");
+      gradient.addColorStop(1, "rgba(0,0,0,0)");
+
+      fogCtx.fillStyle = gradient;
+      fogCtx.beginPath();
+      fogCtx.arc(playerPoint.x, playerPoint.y, radiusInPixels, 0, Math.PI * 2);
+      fogCtx.fill();
+
+      // 3. И ТОЛЬКО ПОТОМ рисуем светящиеся точки поверх прорезанного тумана
+      fogCtx.globalCompositeOperation = "source-over"; // Возвращаем режим обычного рисования
+      
       zones.forEach(zone => {
         if (visitedZones.includes(zone.id)) return;
 
@@ -373,6 +395,8 @@
         fogCtx.fill();
         fogCtx.shadowBlur = 0; 
       });
+    }
+
 
       let playerPoint = map.latLngToContainerPoint([currentLat, currentLng]);
       let radiusInPixels = (visionRadiusMeters / 111300) * (map.getZoom() * 300); 
